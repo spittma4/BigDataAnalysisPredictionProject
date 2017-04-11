@@ -1,8 +1,6 @@
 # BigDataAnalysisPredictionProject
 Big Data Analysis Project 
 
-TESTTTSSTSSTASTDADJLASNDJASNJKLDNKS
-
 Time Series Data: Stock Data Prediction
 Undergraduate # 12
 
