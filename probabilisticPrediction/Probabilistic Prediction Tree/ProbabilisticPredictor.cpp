@@ -34,9 +34,9 @@ void ProbabilisticPredictor::Predict(size_t SequenceNumber)
 		return; // this prediction either exists or is invalid
 	}
 
-	if(((SequenceNumber - 1) - StartOffset) - KnownSymbols.size() > Predictions.size())
+	//if(((SequenceNumber - 1) - StartOffset) - KnownSymbols.size() > Predictions.size())
 	{
-		Predict(SequenceNumber - 1);
+		Predict(SequenceNumber - 1);// this should stop when it hits a predicted or known symbol
 	}
 	deque<size_t> PredictionSequence = GetPredictionSequence(SequenceNumber - 1);
 
@@ -69,7 +69,13 @@ void ProbabilisticPredictor::Predict(size_t SequenceNumber)
 		}
 	}
 
-	double NewProbability = (Predictions.size() ? Predictions.back().second * (BestWeight / TotalWeight) : (BestWeight / TotalWeight));
+	double NewProbability = (TotalWeight
+		? (BestWeight / TotalWeight)
+		: 1 / ((double)Width));
+
+	NewProbability = (Predictions.size()
+		? Predictions.back().second * NewProbability
+		: NewProbability);
 
 
 	Predictions.push_back(pair<size_t, double>(PredictedValue, NewProbability));
@@ -90,6 +96,10 @@ ProbabilisticPredictor::ProbabilisticPredictor(size_t Height_, size_t Width_, si
 
 void ProbabilisticPredictor::InputNextSymbol(size_t NextSymbol)
 {
+	deque<size_t> SymbolSequence;
+	SymbolSequence.push_back(NextSymbol);
+	InputSequence(SymbolSequence);
+	/*
 	if(NextSymbol > Width - 1)
 	{
 		throw string("Symbol \"") + to_string(NextSymbol) + string("\" out of width range ") + to_string(Width);
@@ -141,7 +151,76 @@ void ProbabilisticPredictor::InputNextSymbol(size_t NextSymbol)
 		++StartOffset;
 
 	}
+	*/
 
+}
+
+void ProbabilisticPredictor::InputSequence(deque<size_t> Symbols)
+{
+	if(Symbols.size() == 0) { return; }
+	for(size_t i = 0; i < Symbols.size(); ++i)
+	{
+		if(Symbols[i] >= Width)
+		{
+			throw string("Symbol \"") + to_string(Symbols[i]) + string("\" out of width range ") + to_string(Width);
+		}
+	}
+	if(KnownSymbols.size())
+	{
+		Predict(KnownSymbols.size() + StartOffset + Symbols.size() - 1);
+
+		if(Predictions.size())
+		{
+			for(size_t i = 0; i < Symbols.size(); ++i)
+			{
+
+				bool Hit = false;
+				bool Miss = false;
+				Miss = !(Hit = (Predictions[i].first == Symbols[i]));
+				double Probability = Predictions[i].second;
+
+				deque<size_t> PredictionSequence = GetPredictionSequence(i + KnownSymbols.size() + StartOffset);
+
+				Node * CurrentNode = RootNode;
+				for(size_t j = 0; j < PredictionSequence.size(); ++j)
+				{
+					CurrentNode = CurrentNode->Children[PredictionSequence[j]];
+					if(Miss)
+					{
+						CurrentNode->Miss += Probability;
+					}
+					else if(Hit)
+					{
+						CurrentNode->Hit += Probability;
+					}
+				}
+			}
+		}
+	}
+	Predictions.clear();
+	for(size_t i = 0; i < Symbols.size(); ++i)
+	{
+
+
+		KnownSymbols.push_back(Symbols[i]);
+
+
+		deque<size_t> PredictionSequence = GetPredictionSequence((KnownSymbols.size() - 1));
+		Node * CurrentNode = RootNode;
+		for(size_t j = 0; j < PredictionSequence.size(); ++j)
+		{
+			CurrentNode = CurrentNode->Children[PredictionSequence[j]];
+			CurrentNode->Frequency += 1;
+		}
+
+
+		if(HistorySize && KnownSymbols.size() > HistorySize)
+		{
+			KnownSymbols.pop_front();
+			++StartOffset;
+
+		}
+	}
 
 }
 
@@ -172,7 +251,8 @@ size_t ProbabilisticPredictor::ReadSymbol(size_t SequenceNumber)
 
 double ProbabilisticPredictor::GetSymbolProbability(size_t SequenceNumber)
 {
-	if(SequenceNumber - StartOffset < KnownSymbols.size())
+
+	if(SequenceNumber < StartOffset || SequenceNumber - StartOffset < KnownSymbols.size())
 	{
 		throw string("Can't predict past values");
 	}
@@ -235,11 +315,11 @@ int main()
 
 	cout << "Inputing: 0" << endl;
 	Predicter1.InputNextSymbol(0);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -247,11 +327,11 @@ int main()
 	}
 	cout << "Inputing: 1" << endl;
 	Predicter1.InputNextSymbol(1);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -259,11 +339,11 @@ int main()
 	}
 	cout << "Inputing: 2" << endl;
 	Predicter1.InputNextSymbol(2);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -271,11 +351,11 @@ int main()
 	}
 	cout << "Inputing: 3" << endl;
 	Predicter1.InputNextSymbol(3);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -283,11 +363,11 @@ int main()
 	}
 //	cout << "Inputing: 4" << endl;
 //	Predicter1.InputNextSymbol(4);
-//	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+//	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -295,11 +375,11 @@ int main()
 	}
 	cout << "Inputing: 5" << endl;
 	Predicter1.InputNextSymbol(5);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -309,11 +389,11 @@ int main()
 	{
 		cout << "Inputing: 6" << endl;
 		Predicter1.InputNextSymbol(6);
-		cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 		cout << "Probability: ";
 		try
 		{
-			cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+			cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 		}
 		catch(string ex)
 		{
@@ -330,11 +410,11 @@ int main()
 
 	cout << "Inputing: 0" << endl;
 	Predicter1.InputNextSymbol(0);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -342,11 +422,11 @@ int main()
 	}
 	cout << "Inputing: 1" << endl;
 	Predicter1.InputNextSymbol(1);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -354,11 +434,11 @@ int main()
 	}
 	cout << "Inputing: 2" << endl;
 	Predicter1.InputNextSymbol(2);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -366,11 +446,11 @@ int main()
 	}
 	cout << "Inputing: 3" << endl;
 	Predicter1.InputNextSymbol(3);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -378,11 +458,11 @@ int main()
 	}
 //	cout << "Inputing: 4" << endl;
 //	Predicter1.InputNextSymbol(4);
-//	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+//	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -390,11 +470,11 @@ int main()
 	}
 	cout << "Inputing: 5" << endl;
 	Predicter1.InputNextSymbol(5);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -404,11 +484,11 @@ int main()
 	{
 		cout << "Inputing: 6" << endl;
 		Predicter1.InputNextSymbol(6);
-		cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 		cout << "Probability: ";
 		try
 		{
-			cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+			cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 		}
 		catch(string ex)
 		{
@@ -441,11 +521,11 @@ int main()
 
 	cout << "Inputing: 1" << endl;
 	Predicter1.InputNextSymbol(1);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -453,22 +533,22 @@ int main()
 	}
 	cout << "Inputing: 2" << endl;
 	Predicter1.InputNextSymbol(2);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
 		cout << ex << endl;
 	}
 	cout << "Inputing: 3" << endl;
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -480,11 +560,11 @@ int main()
 	//cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1)<<endl << endl;
 	cout << "Inputing: 5" << endl;
 	Predicter1.InputNextSymbol(5);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -494,11 +574,11 @@ int main()
 
 	cout << "Inputing: 1" << endl;
 	Predicter1.InputNextSymbol(1);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -506,22 +586,22 @@ int main()
 	}
 	cout << "Inputing: 2" << endl;
 	Predicter1.InputNextSymbol(2);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
 		cout << ex << endl;
 	}
 	cout << "Inputing: 3" << endl;
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -533,11 +613,11 @@ int main()
 	//cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1)<<endl << endl;
 	cout << "Inputing: 5" << endl;
 	Predicter1.InputNextSymbol(5);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -546,11 +626,11 @@ int main()
 
 	cout << "Inputing: 1" << endl;
 	Predicter1.InputNextSymbol(1);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -558,22 +638,22 @@ int main()
 	}
 	cout << "Inputing: 2" << endl;
 	Predicter1.InputNextSymbol(2);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
 		cout << ex << endl;
 	}
 	cout << "Inputing: 3" << endl;
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -585,11 +665,11 @@ int main()
 	//cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1)<<endl << endl;
 	cout << "Inputing: 5" << endl;
 	Predicter1.InputNextSymbol(5);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -598,11 +678,11 @@ int main()
 
 	cout << "Inputing: 1" << endl;
 	Predicter1.InputNextSymbol(1);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -610,22 +690,22 @@ int main()
 	}
 	cout << "Inputing: 2" << endl;
 	Predicter1.InputNextSymbol(2);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
 		cout << ex << endl;
 	}
 	cout << "Inputing: 3" << endl;
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -637,11 +717,11 @@ int main()
 	//cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1)<<endl << endl;
 	cout << "Inputing: 5" << endl;
 	Predicter1.InputNextSymbol(5);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -650,11 +730,11 @@ int main()
 
 	cout << "Inputing: 1" << endl;
 	Predicter1.InputNextSymbol(1);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -662,22 +742,22 @@ int main()
 	}
 	cout << "Inputing: 2" << endl;
 	Predicter1.InputNextSymbol(2);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
 		cout << ex << endl;
 	}
 	cout << "Inputing: 3" << endl;
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{
@@ -689,11 +769,11 @@ int main()
 	//cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1)<<endl << endl;
 	cout << "Inputing: 5" << endl;
 	Predicter1.InputNextSymbol(5);
-	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+	cout << "Next Predicted Symbol: " << Predicter1.ReadSymbol(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	cout << "Probability: ";
 	try
 	{
-		cout << Predicter1.GetSymbolProbability(Predicter1.FarthestPredictedSequenceNumber() + 1) << endl;
+		cout << Predicter1.GetSymbolProbability(Predicter1.LatestKnownSequenceNumber() + 1) << endl;
 	}
 	catch(string ex)
 	{

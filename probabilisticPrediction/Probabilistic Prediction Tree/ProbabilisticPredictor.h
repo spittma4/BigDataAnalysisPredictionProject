@@ -48,7 +48,7 @@ public:
 
 	///You can't give it symbols out of order
 	void InputNextSymbol(size_t NextSymbol);
-
+	void InputSequence(deque<size_t> Symbols);
 
 	/// dont read too far into future, that is bad
 	size_t ReadSymbol(size_t SequenceNumber);
@@ -56,8 +56,9 @@ public:
 	/// dont read too far into future, that is bad
 	double GetSymbolProbability(size_t SequenceNumber);
 
-	size_t LatestKnownSequenceNumber() { return StartOffset + KnownSymbols.size() >= 1 ? StartOffset + KnownSymbols.size() - 1 : 0; }
-	size_t FarthestPredictedSequenceNumber() { return StartOffset + KnownSymbols.size() + Predictions.size() >= 2 ? StartOffset + KnownSymbols.size() + Predictions.size() - 2 : 0; }
+	size_t LatestKnownSequenceNumber() { return KnownSymbols.size() ? StartOffset + KnownSymbols.size() - 1 : StartOffset; }
+	//size_t FarthestPredictedSequenceNumber() { return StartOffset + KnownSymbols.size() + Predictions.size() >= 2 ? StartOffset + KnownSymbols.size() + Predictions.size() - 2 : 0; }
+	size_t FarthestPredictedSequenceNumber() { return Predictions.size() ? LatestKnownSequenceNumber() + Predictions.size() - 1 : LatestKnownSequenceNumber(); }
 
 	~ProbabilisticPredictor();
 };
