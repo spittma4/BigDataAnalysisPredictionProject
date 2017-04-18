@@ -800,6 +800,32 @@ int main()
 
 	}
 
+	cout << endl << endl << "Inserting 4, 3, 2: " << endl;
+	deque<size_t> seq;
+	seq.push_back(4);
+	seq.push_back(3);
+	seq.push_back(2);
+	Predicter1.InputSequence(seq);
+
+	cout << endl << endl << "Reading symbols both stored and predicted: " << endl;
+	for(size_t i = 0; i < 50; ++i)
+	{
+		cout << endl;
+		cout << "Outputing Symbol Number: " << i << endl;
+		cout << "Symbol: " << Predicter1.ReadSymbol(i) << endl;
+		cout << "Probability: ";
+		try
+
+		{
+			cout << Predicter1.GetSymbolProbability(i) << endl;
+		}
+		catch(string ex)
+		{
+			cout << ex << endl;
+		}
+
+	}
+
 
 	return 0;
 }
