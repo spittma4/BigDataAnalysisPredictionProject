@@ -4,6 +4,9 @@
 #include <deque>
 #include <utility>
 
+#include <string>
+using std::string;
+using std::to_string;
 using std::pair;
 using std::deque;
 #include "Node.h"
