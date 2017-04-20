@@ -17,6 +17,7 @@ Michael Caprile
 #include <string>
 #include <vector>
 
+#include "../../probabilisticPrediction/Probabilistic Prediction Tree/ProbabilisticPredictor.h"
 using namespace std;
 
 double percentError(double, double);
@@ -79,6 +80,16 @@ int main() {
 	predict600 =
 	predict700 = 
 	*/
+
+	ProbabilisticPredictor SirPredictALot(8, 10);
+	vector<int> deltas;
+
+	for(size_t i = 1; i < inputNums.size(); ++i)
+	{
+		deltas.push_back(inputNums[i] - inputNums[i - 1]);
+	}
+	vector<size_t> symbols;
+	
 
 	//cout the values to see the comparison with percent of error
 	cout << "Actual Value: " << actual100 << "     " << "Predicted Value: " << predict100 << "     " << "Percent Error: " << percentError(actual100, predict100) << "%" << endl;
