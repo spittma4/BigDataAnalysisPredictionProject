@@ -25,6 +25,10 @@ double percentError(double, double);
 int main()
 {
 
+	double TotalDeltaPercentError = 0;
+	double TotalPercentError = 0;
+	size_t ItemsErrorChecked = 0;
+
 	int inputNum = 0;
 	vector<int> inputNums;
 
@@ -62,7 +66,7 @@ int main()
 		//cout << inputNums[i] << endl;
 		//++i;
 	}
-
+	inFile.close();
 	//Set actual values of the data:
 	/*actual100 = inputNums[100];
 	actual200 = inputNums[200];
@@ -168,10 +172,18 @@ int main()
 			}
 			int PredictedValue = inputNums[i + 1] + PredictedDelta;
 
-			cout << "Actual Delta: " << Deltas[i + 1] << "\t\t" << "Predicted Delta: " << PredictedDelta << "\t\t" /*<< "Percent Error: " << percentError(Deltas[i + 1], PredictedDelta)<< "%"*/ << endl;
+
+			double DeltaPercentError = abs(100 * (((double)Deltas[i + 1]) - ((double)PredictedDelta)) / 20);
+
+
+
+			cout << "Actual Delta: " << Deltas[i + 1] << "\t\t" << "Predicted Delta: " << PredictedDelta << "\t\t" << "Percent Error: " << DeltaPercentError << "%" << endl;
 
 			cout << "Actual Value: " << inputNums[i + 2] << "\t\t" << "Predicted Value: " << PredictedValue << "\t\t" << "Percent Error: " << percentError(inputNums[i + 2], PredictedValue) << "%" << endl << endl;
 
+			TotalDeltaPercentError += DeltaPercentError;
+			TotalPercentError += percentError(inputNums[i + 2], PredictedValue);
+			++ItemsErrorChecked;
 		}
 
 	}
@@ -187,9 +199,13 @@ int main()
 	cout << "Actual Value: " << actual700 << "     " << "Predicted Value: " << predict700 << "     " << "Percent Error: " << percentError(actual700, predict700) << "%" << endl;
 	cout << endl;
 	*/
+	cout << "Average Error in Delta: " << TotalDeltaPercentError / ((double)ItemsErrorChecked) << "%" << endl << endl;
 
+	cout << "Average Error: " << TotalPercentError / ((double)ItemsErrorChecked) << "%" << endl << endl;
 
-	inFile.close();
+	//cout << "The average error in delta is the important statistic, it being less than 50% show a significant improvement over pure chance!" << endl << endl;
+
+	
 	return 0;
 }
 
@@ -197,7 +213,7 @@ double percentError(double actual, double predicted)
 {
 	if(predicted == actual) { return 0; }
 	double result = 0.0;
-	result = (predicted - actual) / predicted;
+	result = abs(100 * (predicted - actual) / predicted);
 
 	return result;
 }
