@@ -29,7 +29,7 @@
     <ClCompile Include="ProbabilisticPredictor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tester.cpp">
+    <ClCompile Include="..\..\Presentation\Example Program\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
