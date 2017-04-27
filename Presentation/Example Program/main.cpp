@@ -1,8 +1,8 @@
 /*
 Big Data Analytics, Probabilistic Prediction Project
 Algorithm Example Program to be run on a dataset
-	Currently set up to run on a CSV file of 3 years worth of Google's closing stock prices
-		"Google 3 Year no dates.csv"
+Currently set up to run on a CSV file of 3 years worth of Google's closing stock prices
+"Google 3 Year no dates.csv"
 
 Written by:
 -------
@@ -19,24 +19,24 @@ Michael Capriles
 #include <algorithm>
 #include <cmath>
 
-#include "../../probabilisticPrediction/Probabilistic Prediction Tree/ProbabilisticPredictor.h"
+#include "ProbabilisticPredictor.h"
 using namespace std;
 
 double percentError(double, double);
 
 size_t GenerateSymbol(int Input)
 {
-	if(Input <= -21) { return (0); }
-	else if(Input <= -16) { return (1); }
-	else if(Input <= -11) { return (2); }
-	else if(Input <= -6) { return (3); }
-	else if(Input <= -1) { return (4); }
-	else if(Input <= 4) { return (5); }
-	else if(Input <= 9) { return (6); }
-	else if(Input <= 14) { return (7); }
-	else if(Input <= 19) { return (8); }
-	else if(Input <= 24) { return (9); }
-	else if(Input >= 25) { return (10); }
+	if (Input <= -21) { return (0); }
+	else if (Input <= -16) { return (1); }
+	else if (Input <= -11) { return (2); }
+	else if (Input <= -6) { return (3); }
+	else if (Input <= -1) { return (4); }
+	else if (Input <= 4) { return (5); }
+	else if (Input <= 9) { return (6); }
+	else if (Input <= 14) { return (7); }
+	else if (Input <= 19) { return (8); }
+	else if (Input <= 24) { return (9); }
+	else if (Input >= 25) { return (10); }
 	return 0;
 }
 
@@ -66,9 +66,9 @@ int main()
 		cout << "Open 'WeatherDataCleaned'? (y/n)" << endl;
 		string Resp = "";
 		cin >> Resp;
-		if(Resp[0]=='y'||Resp[0]=='Y')
+		if (Resp[0] == 'y' || Resp[0] == 'Y')
 		{
-		fileName = "WeatherDataCleaned";
+			fileName = "WeatherDataCleaned.txt";
 		}
 		else
 		{
@@ -81,7 +81,7 @@ int main()
 
 	//open the file, should be a .txt file
 	std::ifstream inFile(fileName);
-	if(!inFile)
+	if (!inFile)
 	{
 		cout << "ERROR: File did not open!" << endl;
 		return 1;
@@ -94,7 +94,7 @@ int main()
 	//Input entries from file into vector, inputNums<int> 
 	//i is the iterator to output the entries, if wanted
 	//int i = 0;
-	while(inFile)
+	while (inFile)
 	{
 		inFile >> inputNum;
 		inputNums.push_back(inputNum);
@@ -105,27 +105,6 @@ int main()
 	inFile.close();
 
 	cout << "Data Read!" << endl << endl;
-
-	//Set actual values of the data:
-	/*actual100 = inputNums[100];
-	actual200 = inputNums[200];
-	actual300 = inputNums[300];
-	actual400 = inputNums[400];
-	actual500 = inputNums[500];
-	actual600 = inputNums[600];
-	actual700 = inputNums[700];*/
-
-	//set the values of predicted values 
-	//DO MAGIC HERE MICHAEL
-	/*
-	predict100 =
-	predict200 =
-	predict300 =
-	predict400 =
-	predict500 =
-	predict600 =
-	predict700 =
-	*/
 
 	cout << "Starting Predictor Creation!" << endl;
 	ProbabilisticPredictor SirPredictALot(TreeHeight, TreeWidth);
@@ -148,11 +127,11 @@ int main()
 
 
 	size_t YearsToInput = 10;
-	for(size_t Year = 0; Year < YearsToInput; ++Year)
+	for (size_t Year = 0; Year < YearsToInput; ++Year)
 	{
 
 		cout << "Started Inputting Pass: " << Year + 1 << endl;
-		for(size_t i = 0; i < inputNums.size(); ++i)
+		for (size_t i = 0; i < inputNums.size(); ++i)
 		{
 			//int CurrentValue = inputNums[i];//this will help speed sligtly;
 			//if(CurrentValue <= -21) { SirPredictALot.InputNextSymbol(0); }
@@ -172,7 +151,7 @@ int main()
 			size_t PredictedSymbol = SirPredictALot.ReadSymbol(NextSquenceNumber);
 			double Confidence = SirPredictALot.GetSymbolProbability(NextSquenceNumber);
 
-			if(i + 1 < inputNums.size() && Year == YearsToInput - 1)
+			if (i + 1 < inputNums.size() && Year == YearsToInput - 1)
 			{
 
 
@@ -353,19 +332,6 @@ int main()
 
 	//}
 
-
-	//cout the values to see the comparison with percent of error
-	/*cout << "Actual Value: " << actual100 << "     " << "Predicted Value: " << predict100 << "     " << "Percent Error: " << percentError(actual100, predict100) << "%" << endl;
-	cout << "Actual Value: " << actual200 << "     " << "Predicted Value: " << predict200 << "     " << "Percent Error: " << percentError(actual200, predict200) << "%" << endl;
-	cout << "Actual Value: " << actual300 << "     " << "Predicted Value: " << predict300 << "     " << "Percent Error: " << percentError(actual300, predict300) << "%" << endl;
-	cout << "Actual Value: " << actual400 << "     " << "Predicted Value: " << predict400 << "     " << "Percent Error: " << percentError(actual400, predict400) << "%" << endl;
-	cout << "Actual Value: " << actual500 << "     " << "Predicted Value: " << predict500 << "     " << "Percent Error: " << percentError(actual500, predict500) << "%" << endl;
-	cout << "Actual Value: " << actual600 << "     " << "Predicted Value: " << predict600 << "     " << "Percent Error: " << percentError(actual600, predict600) << "%" << endl;
-	cout << "Actual Value: " << actual700 << "     " << "Predicted Value: " << predict700 << "     " << "Percent Error: " << percentError(actual700, predict700) << "%" << endl;
-	cout << endl;
-	*/
-	//cout << "Average Error in Delta: " << TotalDeltaPercentError / ((double)ItemsErrorChecked) << "%" << endl << endl;
-
 	cout << "////Results://///////////////////////////////////////////////////////////////" << endl;
 	cout << "//                        File: \t" << fileName << endl;
 	cout << "//                 Tree Height: \t" << TreeHeight << endl;
@@ -378,45 +344,23 @@ int main()
 	cout << "//          Improvement Factor: \t" << TotalControlError / TotalErrorRating << endl;
 	cout << "/////////////////////////////////////////////////////////////////////////////" << endl << endl;
 
+	cout << "Input 1 to exit" << endl;
+	int answer = 0;
+	cin >> answer;
+
+	if (answer == 1)
+		return 0;
+	else
+		return 0;
+
 	//cout << "The average error in delta is the important statistic, it being less than 50% show a significant improvement over pure chance!" << endl << endl;
-
-	/*{
-		//open the file, should be a .txt file
-		std::ofstream OutFile("PredictionOutput.txt");
-		if(!OutFile)
-		{
-			cout << "ERROR: File did not open!" << endl;
-			return 1;
-		}
-
-
-		//Input entries from file into vector, inputNums<int>
-		//i is the iterator to output the entries, if wanted
-		//int i = 0;
-		//while(inFile)
-		//{
-		//	inFile >> inputNum;
-		//	inputNums.push_back(inputNum);
-		//	//optional vector contents output for troubleshooting
-		//	//cout << inputNums[i] << endl;
-		//	//++i;
-		//}
-
-		for(size_t i = 0; i < inputNums.size(); ++i)
-		{
-			OutFile << SirPredictALot.ReadSymbol(SirPredictALot.LatestKnownSequenceNumber() + i + 1) << endl;
-		}
-		OutFile.close();
-
-
-	}*/
 
 	return 0;
 }
 
 double percentError(double actual, double predicted)
 {
-	if(predicted == actual) { return 0; }
+	if (predicted == actual) { return 0; }
 	double result = 0.0;
 	result = abs(100 * (predicted - actual) / max(abs(predicted), abs(actual)));
 
