@@ -1,3 +1,3 @@
 ﻿  main.cpp
-c:\users\michael\onedrive\documents\school\kent\classes\spring 2017\big data analytics\bigdataanalysispredictionproject\presentation\example program\main.cpp(85): warning C4244: 'argument': conversion from 'double' to 'const int', possible loss of data
+c:\users\michael\onedrive\documents\school\kent\classes\spring 2017\big data analytics\bigdataanalysispredictionproject\probabilisticprediction\probabilistic prediction tree\main.cpp(100): warning C4244: 'argument': conversion from 'double' to 'const int', possible loss of data
   Probabilistic Prediction Tree.vcxproj -> C:\Users\Michael\OneDrive\Documents\School\Kent\Classes\Spring 2017\Big Data Analytics\BigDataAnalysisPredictionProject\probabilisticPrediction\Debug\Probabilistic Prediction Tree.exe

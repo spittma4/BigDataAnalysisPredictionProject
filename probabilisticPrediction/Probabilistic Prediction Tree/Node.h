@@ -2,11 +2,11 @@
 
 class Node
 {
-	Node() = delete;
-
+	Node();
+	void Initialize(size_t Height, size_t Width);
 
 public:
-	Node * * Children;
+	Node *  Children;
 	size_t Height;
 	size_t Width;
 	size_t Frequency;

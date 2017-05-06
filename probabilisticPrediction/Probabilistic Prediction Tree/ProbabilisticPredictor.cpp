@@ -42,24 +42,24 @@ void ProbabilisticPredictor::Predict(size_t SequenceNumber)
 	Node * CurrentNode = RootNode;
 	for(size_t i = 0; i < PredictionSequence.size(); ++i)
 	{
-		CurrentNode = CurrentNode->Children[PredictionSequence[i]];
+		CurrentNode = &(CurrentNode->Children[PredictionSequence[i]]);
 	}
 
 	double TotalWeight = 0;
 	for(size_t i = 0; i < Width; ++i)
 	{
-		TotalWeight += CurrentNode->Children[i]->GetProbabilityWeight();
+		TotalWeight += CurrentNode->Children[i].GetProbabilityWeight();
 	}
 
 	size_t PredictedValue = PredictionSequence.back();
-	double BestWeight = CurrentNode->Children[PredictedValue]->GetProbabilityWeight();
+	double BestWeight = CurrentNode->Children[PredictedValue].GetProbabilityWeight();
 
 	for(size_t i = 0; i < Width; ++i)
 	{
-		if(CurrentNode->Children[i]->GetProbabilityWeight() > BestWeight)
+		if(CurrentNode->Children[i].GetProbabilityWeight() > BestWeight)
 		{
 			PredictedValue = i;
-			BestWeight = CurrentNode->Children[PredictedValue]->GetProbabilityWeight();
+			BestWeight = CurrentNode->Children[PredictedValue].GetProbabilityWeight();
 		}
 	}
 
@@ -178,7 +178,7 @@ void ProbabilisticPredictor::InputSequence(deque<size_t> Symbols)
 				Node * CurrentNode = RootNode;
 				for(size_t j = 0; j < PredictionSequence.size(); ++j)
 				{
-					CurrentNode = CurrentNode->Children[PredictionSequence[j]];
+					CurrentNode = &(CurrentNode->Children[PredictionSequence[j]]);
 					if(Miss)
 					{
 						CurrentNode->Miss += Probability;
@@ -203,7 +203,7 @@ void ProbabilisticPredictor::InputSequence(deque<size_t> Symbols)
 		Node * CurrentNode = RootNode;
 		for(size_t j = 0; j < PredictionSequence.size(); ++j)
 		{
-			CurrentNode = CurrentNode->Children[PredictionSequence[j]];
+			CurrentNode = &(CurrentNode->Children[PredictionSequence[j]]);
 			CurrentNode->Frequency += 1;
 		}
 

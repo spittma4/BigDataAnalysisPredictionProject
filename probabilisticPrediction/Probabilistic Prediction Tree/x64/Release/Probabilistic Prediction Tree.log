@@ -1,1 +1,9 @@
-﻿
+﻿  main.cpp
+main.cpp(100): warning C4244: 'argument': conversion from 'double' to 'const int', possible loss of data
+  Node.cpp
+Node.cpp(49): warning C4244: 'return': conversion from 'size_t' to 'double', possible loss of data
+  ProbabilisticPredictor.cpp
+  Generating code
+  All 517 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Probabilistic Prediction Tree.vcxproj -> C:\Users\Michael\OneDrive\Documents\School\Kent\Classes\Spring 2017\Big Data Analytics\BigDataAnalysisPredictionProject\probabilisticPrediction\x64\Release\Probabilistic Prediction Tree.exe

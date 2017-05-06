@@ -146,9 +146,15 @@
     <ClInclude Include="ProbabilisticPredictor.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Presentation\Example Program\main.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="ProbabilisticPredictor.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="WeatherDataCleaned.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="WeatherDataCleaned" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
