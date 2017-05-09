@@ -344,7 +344,7 @@ int main()
 	cout << "//          Improvement Factor: \t" << TotalControlError / TotalErrorRating << endl;
 	cout << "/////////////////////////////////////////////////////////////////////////////" << endl << endl;
 
-	cout << "Input 1 to exit" << endl;
+/*	cout << "Input 1 to exit" << endl;
 	int answer = 0;
 	cin >> answer;
 
@@ -354,6 +354,11 @@ int main()
 		return 0;
 
 	//cout << "The average error in delta is the important statistic, it being less than 50% show a significant improvement over pure chance!" << endl << endl;
+	*/
+	cout << "press enter to exit" << endl;
+	string exiter ="";
+	cin.ignore(2);
+	//getline(cin, exiter);
 
 	return 0;
 }
