@@ -1,6 +1,5 @@
-Repository for presentation documents
+Repository for presentation documents, such as our example program analyzing weather data that was presented in class.
 
-The data file is "googleData.txt" when prompted for the name of a file. 
----It can also be another file as long as it is a .txt file with number separated by spaces/newlines
+In order to use the program, have all source code documents and "weatherDataCleaned.txt" in the same repository.
 
 Make sure data.txt and main.cpp are in the same directory...
