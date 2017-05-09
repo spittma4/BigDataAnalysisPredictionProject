@@ -9,6 +9,8 @@ Team member 2 (Adam Duryea, 810599988, aduryea@kent.edu)
 Team member 3 (Shane Favours, student ID, sfavours@kent.edu)
 Team member 4 (Samuel Pittman, 810666476, spittma4@kent.edu)
 
+Example program is located in "Presentation" direectory.
+
 Based off of:
 Xiang Lian, Lei Chen. Efficient Similarity Search over Future Stream Time Series. In XXX, pages XXX-XXX, 2008.
 
