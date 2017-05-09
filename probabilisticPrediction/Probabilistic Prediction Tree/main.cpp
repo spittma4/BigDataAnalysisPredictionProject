@@ -44,7 +44,7 @@ size_t GenerateSymbol(int Input)
 int main()
 {
 	size_t TreeWidth = 11;
-	size_t TreeHeight = 9;
+	size_t TreeHeight = 7;
 
 	//double TotalDeltaPercentError = 0;
 	double TotalControlError = 0; //This just guesses the last value
