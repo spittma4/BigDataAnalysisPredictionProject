@@ -11,6 +11,8 @@ Team member 4 (Samuel Pittman, 810666476, spittma4@kent.edu)
 
 Example program is located in "Presentation" direectory.
 
+Presentation Link: http://prezi.com/q2yhgr6_wojl/?utm_campaign=share&utm_medium=copy
+
 Based off of:
 Xiang Lian, Lei Chen. Efficient Similarity Search over Future Stream Time Series. In XXX, pages XXX-XXX, 2008.
 
