@@ -107,7 +107,7 @@ int main()
 	cout << "Data Read!" << endl << endl;
 
 	cout << "Starting Predictor Creation!" << endl;
-	ProbabilisticPredictor SirPredictALot(TreeHeight, TreeWidth);
+	ProbabilisticPredictor SirPredictALot(TreeHeight, TreeWidth, TreeHeight + 5);
 
 	cout << "Predictor Creation Finished!" << endl << endl;
 
